@@ -9,7 +9,7 @@ before:
 builds:
 -
   id: "ss5"
-  main: ./cmd/server/main.go
+  main: ../cmd/server/main.go
   binary: "ss5"
   goos:
     - linux

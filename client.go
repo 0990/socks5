@@ -3,23 +3,26 @@ package socks5
 import (
 	"errors"
 	"fmt"
-	"github.com/0990/socks5/config"
 	"net"
 	"time"
 )
 
 type client struct {
-	cfg              config.Client
-	tcpConn          *net.TCPConn
-	dialSuccCallback func(conn *net.TCPConn)
+	cfg                   ClientCfg
+	tcpConn               *net.TCPConn
+	handshakeSuccCallback func(conn *net.TCPConn)
 }
 
-func NewClient(cfg config.Client, dialSuccCallback func(conn *net.TCPConn)) *client {
+func NewClient(cfg ClientCfg) *client {
 	return &client{
-		cfg:              cfg,
-		tcpConn:          nil,
-		dialSuccCallback: dialSuccCallback,
+		cfg:                   cfg,
+		tcpConn:               nil,
+		handshakeSuccCallback: nil,
 	}
+}
+
+func (p *client) SetHandshakeSuccCallback(cb func(c *net.TCPConn)) {
+	p.handshakeSuccCallback = cb
 }
 
 func (p *client) Dial(network, addr string) (net.Conn, error) {
@@ -66,8 +69,8 @@ func (p *client) Dial(network, addr string) (net.Conn, error) {
 		return nil, err
 	}
 
-	if p.dialSuccCallback != nil {
-		p.dialSuccCallback(p.tcpConn)
+	if p.handshakeSuccCallback != nil {
+		p.handshakeSuccCallback(p.tcpConn)
 	}
 
 	if cmd == CmdConnect {

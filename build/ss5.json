@@ -1,0 +1,7 @@
+{
+    "ListenPort": 1080,
+    "UserName": "",
+    "Password": "",
+    "UDPTimout": 60,
+    "TCPTimeout": 60
+}

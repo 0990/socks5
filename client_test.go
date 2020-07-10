@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"github.com/0990/socks5/config"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -14,25 +13,26 @@ import (
 //you should start a socks5 server before test
 //for me,use ss5 because it support udp
 
+const TEST_SERVER_ADDR = "10.225.137.202:1080"
+
 func TestClient_NoAuth(t *testing.T) {
-	ClientTest(config.Client{
-		ServerAddr: "10.225.137.202:1080",
-		//ServerAddr: "127.0.0.1:1080",
-		UserName: "",
-		Password: "",
-	}, nil, t)
+	ClientTest(ClientCfg{
+		ServerAddr: TEST_SERVER_ADDR,
+		UserName:   "",
+		Password:   "",
+	}, t)
 }
 
 func TestClient_UserPassAuth(t *testing.T) {
-	ClientTest(config.Client{
-		ServerAddr: "10.225.137.202:1080",
-		UserName:   "xujialong",
+	ClientTest(ClientCfg{
+		ServerAddr: TEST_SERVER_ADDR,
+		UserName:   "0990",
 		Password:   "123456",
-	}, nil, t)
+	}, t)
 }
 
-func ClientTest(cfg config.Client, dialcb func(conn *net.TCPConn), t *testing.T) {
-	sc := NewClient(cfg, dialcb)
+func ClientTest(cfg ClientCfg, t *testing.T) {
+	sc := NewClient(cfg)
 
 	hc := &http.Client{
 		Transport: &http.Transport{
@@ -60,16 +60,16 @@ func ClientTest(cfg config.Client, dialcb func(conn *net.TCPConn), t *testing.T)
 }
 
 func TestClient_UDP(t *testing.T) {
-	ClientTestUDP(config.Client{
-		ServerAddr: "10.225.137.202:1080",
+	ClientTestUDP(ClientCfg{
+		ServerAddr: TEST_SERVER_ADDR,
 		UserName:   "",
 		Password:   "",
 		UDPTimout:  2,
-	}, nil, t)
+	}, t)
 }
 
-func ClientTestUDP(cfg config.Client, dialcb func(conn *net.TCPConn), t *testing.T) {
-	sc := NewClient(cfg, dialcb)
+func ClientTestUDP(cfg ClientCfg, t *testing.T) {
+	sc := NewClient(cfg)
 	conn, err := sc.Dial("udp", "8.8.8.8:53")
 	if err != nil {
 		t.Fatal(err)
@@ -95,7 +95,7 @@ func ClientTestUDP(cfg config.Client, dialcb func(conn *net.TCPConn), t *testing
 }
 
 func TestClient_UDP_TcpDisconnect(t *testing.T) {
-	ClientTestUDP_TCPDisconnect(config.Client{
+	ClientTestUDP_TCPDisconnect(ClientCfg{
 		ServerAddr: "10.225.137.202:1080",
 		UserName:   "",
 		Password:   "",
@@ -105,8 +105,9 @@ func TestClient_UDP_TcpDisconnect(t *testing.T) {
 	}, t)
 }
 
-func ClientTestUDP_TCPDisconnect(cfg config.Client, dialcb func(conn *net.TCPConn), t *testing.T) {
-	sc := NewClient(cfg, dialcb)
+func ClientTestUDP_TCPDisconnect(cfg ClientCfg, handshakeCB func(conn *net.TCPConn), t *testing.T) {
+	sc := NewClient(cfg)
+	sc.SetHandshakeSuccCallback(handshakeCB)
 
 	conn, err := sc.Dial("udp", "8.8.8.8:53")
 	if err != nil {

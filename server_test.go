@@ -1,17 +1,20 @@
 package socks5
 
 import (
-	"github.com/0990/socks5/config"
 	"net"
 	"testing"
 )
 
+func TestServer_CreateConfig(t *testing.T) {
+	CreateServerCfg("ss5.json")
+}
+
 func TestServer_NoAuth(t *testing.T) {
-	ServerTest(config.Server{
+	ServerTest(ServerCfg{
 		ListenPort: 1080,
 		UserName:   "",
 		Password:   "",
-	}, config.Client{
+	}, ClientCfg{
 		ServerAddr: "127.0.0.1:1080",
 		UserName:   "",
 		Password:   "",
@@ -21,11 +24,11 @@ func TestServer_NoAuth(t *testing.T) {
 }
 
 func TestServer_UserPassAuth(t *testing.T) {
-	ServerTest(config.Server{
+	ServerTest(ServerCfg{
 		ListenPort: 1080,
 		UserName:   "0990",
 		Password:   "123456",
-	}, config.Client{
+	}, ClientCfg{
 		ServerAddr: "127.0.0.1:1080",
 		UserName:   "0990",
 		Password:   "123456",
@@ -35,12 +38,12 @@ func TestServer_UserPassAuth(t *testing.T) {
 }
 
 func TestServer_UDP(t *testing.T) {
-	ServerUDPTest(config.Server{
+	ServerUDPTest(ServerCfg{
 		ListenPort: 1080,
 		UserName:   "",
 		Password:   "",
 		UDPTimout:  2,
-	}, config.Client{
+	}, ClientCfg{
 		ServerAddr: "127.0.0.1:1080",
 		UserName:   "",
 		Password:   "",
@@ -49,28 +52,28 @@ func TestServer_UDP(t *testing.T) {
 	}, t)
 }
 
-func ServerTest(s config.Server, c config.Client, t *testing.T) {
+func ServerTest(s ServerCfg, c ClientCfg, t *testing.T) {
 	ss := NewServer(s)
 	err := ss.Run()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	ClientTest(c, nil, t)
+	ClientTest(c, t)
 }
 
-func ServerUDPTest(s config.Server, c config.Client, t *testing.T) {
+func ServerUDPTest(s ServerCfg, c ClientCfg, t *testing.T) {
 	ss := NewServer(s)
 	err := ss.Run()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	ClientTestUDP(c, nil, t)
+	ClientTestUDP(c, t)
 }
 
 func TestServer_UDP_TcpDisconnect(t *testing.T) {
-	ss := NewServer(config.Server{
+	ss := NewServer(ServerCfg{
 		ListenPort: 1080,
 		UserName:   "",
 		Password:   "",
@@ -80,7 +83,7 @@ func TestServer_UDP_TcpDisconnect(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ClientTestUDP_TCPDisconnect(config.Client{
+	ClientTestUDP_TCPDisconnect(ClientCfg{
 		ServerAddr: "127.0.0.1:1080",
 		UserName:   "",
 		Password:   "",

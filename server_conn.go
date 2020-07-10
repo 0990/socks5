@@ -2,7 +2,6 @@ package socks5
 
 import (
 	"fmt"
-	"github.com/0990/socks5/config"
 	"github.com/sirupsen/logrus"
 	"net"
 	"strings"
@@ -11,7 +10,7 @@ import (
 
 type Socks5Conn struct {
 	conn net.Conn
-	cfg  config.Server
+	cfg  ServerCfg
 }
 
 func (p *Socks5Conn) Handle() error {

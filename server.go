@@ -2,7 +2,6 @@ package socks5
 
 import (
 	"fmt"
-	"github.com/0990/socks5/config"
 	"github.com/sirupsen/logrus"
 	"net"
 	"time"
@@ -12,17 +11,17 @@ type Server interface {
 	Run() error
 }
 
-func NewServer(cfg config.Server) Server {
+func NewServer(cfg ServerCfg) Server {
 	return newServer(cfg)
 }
 
 type server struct {
 	listener   net.Listener
-	cfg        config.Server
+	cfg        ServerCfg
 	listenAddr string
 }
 
-func newServer(cfg config.Server) *server {
+func newServer(cfg ServerCfg) *server {
 	p := &server{
 		cfg:        cfg,
 		listenAddr: fmt.Sprintf(":%d", cfg.ListenPort),
