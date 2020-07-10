@@ -13,7 +13,7 @@ import (
 //you should start a socks5 server before test
 //for me,use ss5 because it support udp
 
-const TEST_SERVER_ADDR = "10.225.137.202:1080"
+const TEST_SERVER_ADDR = "127.0.0.1:1086"
 
 func TestClient_NoAuth(t *testing.T) {
 	ClientTest(ClientCfg{
@@ -64,7 +64,7 @@ func TestClient_UDP(t *testing.T) {
 		ServerAddr: TEST_SERVER_ADDR,
 		UserName:   "",
 		Password:   "",
-		UDPTimout:  2,
+		UDPTimout:  60,
 	}, t)
 }
 
@@ -96,7 +96,7 @@ func ClientTestUDP(cfg ClientCfg, t *testing.T) {
 
 func TestClient_UDP_TcpDisconnect(t *testing.T) {
 	ClientTestUDP_TCPDisconnect(ClientCfg{
-		ServerAddr: "10.225.137.202:1080",
+		ServerAddr: "127.0.0.1:1080",
 		UserName:   "",
 		Password:   "",
 		UDPTimout:  2,

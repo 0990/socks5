@@ -77,6 +77,7 @@ func (p *client) Dial(network, addr string) (net.Conn, error) {
 		return p.tcpConn, nil
 	} else {
 		udpConn, err := net.Dial("udp", reply.Address())
+		fmt.Println(reply.Address())
 		if err != nil {
 			return nil, err
 		}

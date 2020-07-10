@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"net"
+	"os"
 	"time"
 )
 
@@ -19,12 +20,15 @@ type server struct {
 	listener   net.Listener
 	cfg        ServerCfg
 	listenAddr string
+
+	envAddr string //环境变量中的服务器IP（docker专用）
 }
 
 func newServer(cfg ServerCfg) *server {
 	p := &server{
 		cfg:        cfg,
 		listenAddr: fmt.Sprintf(":%d", cfg.ListenPort),
+		envAddr:    os.Getenv("PROXY_ADDR"),
 	}
 	return p
 }
@@ -61,8 +65,9 @@ func (p *server) serve() {
 
 func (p *server) connHandler(conn net.Conn) {
 	c := &Socks5Conn{
-		conn: conn,
-		cfg:  p.cfg,
+		conn:    conn,
+		cfg:     p.cfg,
+		envAddr: p.envAddr,
 	}
 	err := c.Handle()
 	if err != nil {
