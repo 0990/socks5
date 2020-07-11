@@ -2,7 +2,6 @@ package socks5
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"net"
 	"strings"
 	"time"
@@ -19,17 +18,17 @@ func (p *Socks5Conn) Handle() error {
 
 	method, err := p.selectAuthMethod()
 	if err != nil {
-		return err
+		return fmt.Errorf("selectAuthMethod:%w", err)
 	}
 
 	err = p.checkAuthMethod(method)
 	if err != nil {
-		return err
+		return fmt.Errorf("checkAuthMethod:%w", err)
 	}
 
 	req, err := p.readRequest()
 	if err != nil {
-		return err
+		return fmt.Errorf("readRequest:%w", err)
 	}
 
 	return p.handleRequest(req)
@@ -38,7 +37,7 @@ func (p *Socks5Conn) Handle() error {
 func (p *Socks5Conn) selectAuthMethod() (byte, error) {
 	req, err := NewMethodSelectReqFrom(p.conn)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("NewMethodSelectReqFrom:%w", err)
 	}
 
 	if req.Ver != VerSocks5 {
@@ -64,7 +63,7 @@ func (p *Socks5Conn) selectAuthMethod() (byte, error) {
 
 	_, err = p.conn.Write(NewMethodSelectReply(method).ToBytes())
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("reply:%w", err)
 	}
 
 	if method == MethodNoAcceptable {
@@ -81,7 +80,7 @@ func (p *Socks5Conn) checkAuthMethod(method byte) error {
 	case MethodUserPass:
 		req, err := NewUserPassAuthReqFrom(p.conn)
 		if err != nil {
-			return err
+			return fmt.Errorf("NewUserPassAuthReqFrom:%w", err)
 		}
 
 		if req.Ver != VerAuthUserPass {
@@ -95,7 +94,7 @@ func (p *Socks5Conn) checkAuthMethod(method byte) error {
 
 		_, err = p.conn.Write(NewUserPassAuthReply(status).ToBytes())
 		if err != nil {
-			return err
+			return fmt.Errorf("reply:%w", err)
 		}
 
 		if status != AuthStatusSuccess {
@@ -150,58 +149,46 @@ func (p *Socks5Conn) handleConnect(req *Request) error {
 			rep = RepNetworkUnreachable
 		}
 		p.conn.Write(NewReply(rep, nil).ToBytes())
-		return fmt.Errorf("Connect to %v failed: %v", req.Address(), err)
+		return fmt.Errorf("Connect to %v failed: %w", req.Address(), err)
 	}
 	defer s.Close()
 
 	bAddr, err := NewAddrByteFromString(s.LocalAddr().(*net.TCPAddr).String())
 	if err != nil {
 		p.conn.Write(NewReply(RepServerFailure, nil).ToBytes())
-		return err
+		return fmt.Errorf("NewAddrByteFromString:%w", err)
 	}
 
 	_, err = p.conn.Write(NewReply(RepSuccess, bAddr).ToBytes())
 	if err != nil {
-		return err
+		return fmt.Errorf("reply:%w", err)
 	}
 
+	timeout := time.Duration(p.cfg.TCPTimeout) * time.Second
 	go func() {
-		b := make([]byte, socketBufSize)
-		for {
-			if p.cfg.TCPTimeout != 0 {
-				s.SetReadDeadline(time.Now().Add(time.Duration(p.cfg.TCPTimeout) * time.Second))
-			}
-			n, err := s.Read(b)
-			if err != nil {
-				return
-			}
-			wn, err := p.conn.Write(b[0:n])
-			if err != nil {
-				return
-			}
-			if wn != n {
-				logrus.Error("write not full")
-				return
-			}
-		}
+		copyWithTimeout(p.conn, s, timeout)
 	}()
 
+	copyWithTimeout(s, p.conn, timeout)
+	return nil
+}
+
+func copyWithTimeout(dst net.Conn, src net.Conn, timeout time.Duration) error {
 	b := make([]byte, socketBufSize)
 	for {
-		if p.cfg.TCPTimeout != 0 {
-			p.conn.SetReadDeadline(time.Now().Add(time.Duration(p.cfg.TCPTimeout) * time.Second))
+		if timeout != 0 {
+			src.SetReadDeadline(time.Now().Add(timeout))
 		}
-		n, err := p.conn.Read(b)
+		n, err := src.Read(b)
 		if err != nil {
-			return nil
+			return fmt.Errorf("copy read:%w", err)
 		}
-		wn, err := s.Write(b[0:n])
+		wn, err := dst.Write(b[0:n])
 		if err != nil {
-			return nil
+			return fmt.Errorf("copy write:%w", err)
 		}
 		if wn != n {
-			logrus.Error("write not full")
-			return nil
+			return fmt.Errorf("copy write not full")
 		}
 	}
 	return nil
@@ -210,7 +197,7 @@ func (p *Socks5Conn) handleConnect(req *Request) error {
 func (p *Socks5Conn) readRequest() (*Request, error) {
 	req, err := NewRequestFrom(p.conn)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("readRequest:%w", err)
 	}
 	return req, nil
 }
