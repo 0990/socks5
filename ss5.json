@@ -1,7 +1,8 @@
 {
-    "ListenPort": 1080,
+    "ListenPort": 1236,
     "UserName": "",
     "Password": "",
     "UDPTimout": 60,
-    "TCPTimeout": 60
+    "TCPTimeout": 60,
+    "UDPAddr": "127.0.0.1:1236"
 }

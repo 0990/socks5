@@ -8,9 +8,8 @@ import (
 )
 
 type Socks5Conn struct {
-	conn    net.Conn
-	cfg     ServerCfg
-	envAddr string
+	conn net.Conn
+	cfg  ServerCfg
 }
 
 func (p *Socks5Conn) Handle() error {
@@ -123,8 +122,8 @@ func (p *Socks5Conn) handleUDP(req *Request) error {
 	addr := p.conn.LocalAddr().(*net.TCPAddr)
 	saddr := addr.String()
 	//docker环境中获取不了本机正确ip,这时需要从事先设置的环境变量中获取
-	if p.envAddr != "" {
-		saddr = p.envAddr
+	if p.cfg.UDPAddr != "" {
+		saddr = p.cfg.UDPAddr
 	}
 	bAddr, err := NewAddrByteFromString(saddr)
 	if err != nil {

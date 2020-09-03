@@ -52,6 +52,11 @@ func parseOSEnvCfg() *socks5.ServerCfg {
 	udpTimeout := os.Getenv("PROXY_UDP_TIMEOUT")
 	tcpTimeout := os.Getenv("PROXY_TCP_TIMEOUT")
 	port := os.Getenv("PROXY_PORT")
+	udpAddr := os.Getenv("PROXY_UDP_ADDR")
+
+	if udpAddr != "" {
+		cfg.UDPAddr = udpAddr
+	}
 
 	if username != "" {
 		cfg.UserName = username
