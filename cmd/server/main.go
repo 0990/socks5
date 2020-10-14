@@ -14,7 +14,7 @@ import (
 var confFile = flag.String("c", "ss5.json", "config file")
 
 func main() {
-	logconfig.InitLogrus("ss5", 10, logrus.InfoLevel)
+	logconfig.InitLogrus("ss5", 10, logrus.DebugLevel)
 
 	flag.Parse()
 

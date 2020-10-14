@@ -64,8 +64,9 @@ func (p *server) connHandler(conn net.Conn) {
 		conn: conn,
 		cfg:  p.cfg,
 	}
-	err := c.Handle()
-	if err != nil {
-		logrus.WithError(err).Error("socks5 conn handle")
-	}
+	c.Handle()
+	//err := c.Handle()
+	//if err != nil {
+	//	logrus.WithError(err).Error("socks5 conn handle")
+	//}
 }

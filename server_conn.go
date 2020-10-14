@@ -2,6 +2,7 @@ package socks5
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"net"
 	"strings"
 	"time"
@@ -138,7 +139,9 @@ func (p *Socks5Conn) handleUDP(req *Request) error {
 }
 
 func (p *Socks5Conn) handleConnect(req *Request) error {
-	s, err := net.DialTimeout("tcp", req.Address(), time.Second*10)
+	addr := req.Address()
+	logrus.Debug("tcp req:", addr)
+	s, err := net.DialTimeout("tcp", addr, time.Second*10)
 	if err != nil {
 		msg := err.Error()
 		var rep byte = RepHostUnreachable
