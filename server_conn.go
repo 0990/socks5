@@ -135,6 +135,16 @@ func (p *Socks5Conn) handleUDP(req *Request) error {
 	if err != nil {
 		return err
 	}
+
+	buf := make([]byte, 32)
+	for {
+		//p.conn.SetDeadline(time.Time{})
+		_, err := p.conn.Read(buf)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
