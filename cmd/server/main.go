@@ -3,18 +3,19 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/0990/socks5"
-	"github.com/0990/socks5/logconfig"
-	"github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
 	"strconv"
+
+	"github.com/0990/socks5"
+	"github.com/0990/socks5/logconfig"
+	"github.com/sirupsen/logrus"
 )
 
 var confFile = flag.String("c", "ss5.json", "config file")
 
 func main() {
-	logconfig.InitLogrus("ss5", 10, logrus.DebugLevel)
+	logconfig.InitLogrus("ss5", 10, logrus.ErrorLevel)
 
 	flag.Parse()
 

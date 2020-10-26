@@ -2,10 +2,11 @@ package socks5
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"net"
 	"strings"
 	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
 type Socks5Conn struct {

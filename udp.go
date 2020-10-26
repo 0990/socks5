@@ -2,11 +2,11 @@ package socks5
 
 import (
 	"errors"
-	"fmt"
-	"github.com/sirupsen/logrus"
 	"net"
 	"sync"
 	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
 const socketBufSize = 64 * 1024
@@ -62,13 +62,14 @@ func relayToRemote(sender net.PacketConn, datagram []byte) error {
 	}
 
 	udpTargetAddr := d.Address()
-	logrus.Debug("udp req:", udpTargetAddr)
 
-	PrintDNS(fmt.Sprintf("query dns:%s", udpTargetAddr), d.Data)
+	//PrintDNS(fmt.Sprintf("query dns:%s", udpTargetAddr), d.Data)
 	tgtUDPAddr, err := net.ResolveUDPAddr("udp", udpTargetAddr)
 	if err != nil {
 		return err
 	}
+
+	logrus.Debug("udp  req:", udpTargetAddr)
 
 	_, err = sender.WriteTo(d.Data, tgtUDPAddr)
 	return err
