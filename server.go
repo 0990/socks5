@@ -3,6 +3,7 @@ package socks5
 import (
 	"fmt"
 	"github.com/sirupsen/logrus"
+	"io"
 	"net"
 	"time"
 )
@@ -64,9 +65,9 @@ func (p *server) connHandler(conn net.Conn) {
 		conn: conn,
 		cfg:  p.cfg,
 	}
-	c.Handle()
+	err := c.Handle()
 	//err := c.Handle()
-	//if err != nil {
-	//	logrus.WithError(err).Error("socks5 conn handle")
-	//}
+	if err != io.EOF && err != nil {
+		logrus.WithError(err).Warn("socks5 conn handle")
+	}
 }
