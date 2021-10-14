@@ -1,8 +1,8 @@
 package socks5
 
 import (
-	"fmt"
 	"github.com/miekg/dns"
+	"github.com/sirupsen/logrus"
 )
 
 func PrintDNS(title string, data []byte) {
@@ -12,6 +12,6 @@ func PrintDNS(title string, data []byte) {
 		return
 	}
 
-	fmt.Println(title)
-	fmt.Println(a.String())
+	logrus.Info(title)
+	logrus.Info(a.String())
 }

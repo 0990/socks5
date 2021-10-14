@@ -14,6 +14,7 @@ var DefaultServerConfig = ServerCfg{
 	UDPTimout:  60,
 	TCPTimeout: 60,
 	UDPAddr:    "",
+	LogLevel:   "error",
 }
 
 type ServerCfg struct {
@@ -23,6 +24,7 @@ type ServerCfg struct {
 	UDPTimout  int
 	TCPTimeout int
 	UDPAddr    string
+	LogLevel   string
 }
 
 func ReadOrCreateServerCfg(path string) (*ServerCfg, error) {
