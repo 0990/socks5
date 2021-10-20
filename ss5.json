@@ -1,8 +1,9 @@
 {
-    "ListenPort": 1085,
+    "ListenPort": 1080,
     "UserName": "",
     "Password": "",
     "UDPTimout": 60,
     "TCPTimeout": 60,
-    "UDPAddr": "192.168.199.106:1085"
+    "UDPAddr": "127.0.0.1:1080",
+    "LogLevel": "error"
 }

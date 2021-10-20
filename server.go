@@ -60,13 +60,13 @@ func (p *server) serve() {
 }
 
 func (p *server) connHandler(conn net.Conn) {
-	c := &Socks5Conn{
+	c := &Conn{
 		conn: conn,
 		cfg:  p.cfg,
 	}
-	c.Handle()
-	//err := c.Handle()
-	//if err != nil {
-	//	logrus.WithError(err).Error("socks5 conn handle")
-	//}
+
+	err := c.Handle()
+	if err != nil {
+		logrus.WithError(err).Error("conn handle")
+	}
 }

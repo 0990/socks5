@@ -30,7 +30,8 @@ func main() {
 
 	logLevel, err := logrus.ParseLevel(cfg.LogLevel)
 	if err != nil {
-		logrus.Fatal(err)
+		logrus.WithError(err).Warn("parseLogLevel fail,set default level:error")
+		logLevel = logrus.ErrorLevel
 	}
 
 	logconfig.InitLogrus("ss5", 10, logLevel)

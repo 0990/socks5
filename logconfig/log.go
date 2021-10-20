@@ -61,7 +61,7 @@ func (p *DefaultHook) Fire(entry *logrus.Entry) error {
 	if err != nil {
 		return err
 	}
-	if entry.Level < logrus.ErrorLevel {
+	if entry.Level > logrus.ErrorLevel {
 		_, err = p.writer.Write(data)
 	} else {
 		_, err = p.errWriter.Write(data)

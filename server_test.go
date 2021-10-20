@@ -92,3 +92,27 @@ func TestServer_UDP_TcpDisconnect(t *testing.T) {
 		conn.Close()
 	}, t)
 }
+
+func TestServer_Socks4(t *testing.T) {
+	Socks4ServerTest(ServerCfg{
+		ListenPort: 1089,
+		UserName:   "",
+		Password:   "",
+	}, ClientCfg{
+		ServerAddr: "127.0.0.1:1080",
+		UserName:   "",
+		Password:   "",
+		UDPTimout:  0,
+		TCPTimeout: 0,
+	}, t)
+}
+
+func Socks4ServerTest(s ServerCfg, c ClientCfg, t *testing.T) {
+	ss := NewServer(s)
+	err := ss.Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	Socks4ClientTest(c, t)
+}

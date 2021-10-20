@@ -15,8 +15,6 @@ type Socks5Conn struct {
 }
 
 func (p *Socks5Conn) Handle() error {
-	defer p.conn.Close()
-
 	method, err := p.selectAuthMethod()
 	if err != nil {
 		return fmt.Errorf("selectAuthMethod:%w", err)
@@ -162,7 +160,8 @@ func (p *Socks5Conn) handleConnect(req *Request) error {
 			rep = RepNetworkUnreachable
 		}
 		p.conn.Write(NewReply(rep, nil).ToBytes())
-		return fmt.Errorf("Connect to %v failed: %w", req.Address(), err)
+		logrus.WithError(err).Debugf("connect to %v failed", req.Address())
+		return nil
 	}
 	defer s.Close()
 
@@ -183,27 +182,6 @@ func (p *Socks5Conn) handleConnect(req *Request) error {
 	}()
 
 	copyWithTimeout(s, p.conn, timeout)
-	return nil
-}
-
-func copyWithTimeout(dst net.Conn, src net.Conn, timeout time.Duration) error {
-	b := make([]byte, socketBufSize)
-	for {
-		if timeout != 0 {
-			src.SetReadDeadline(time.Now().Add(timeout))
-		}
-		n, err := src.Read(b)
-		if err != nil {
-			return fmt.Errorf("copy read:%w", err)
-		}
-		wn, err := dst.Write(b[0:n])
-		if err != nil {
-			return fmt.Errorf("copy write:%w", err)
-		}
-		if wn != n {
-			return fmt.Errorf("copy write not full")
-		}
-	}
 	return nil
 }
 

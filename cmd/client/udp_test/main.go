@@ -17,7 +17,7 @@ func main() {
 }
 
 func doDNS() error {
-	sc := socks5.NewClient(socks5.ClientCfg{
+	sc := socks5.NewSocks5Client(socks5.ClientCfg{
 		ServerAddr: "127.0.0.1:1080",
 		UserName:   "",
 		Password:   "",

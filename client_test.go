@@ -32,7 +32,35 @@ func TestClient_UserPassAuth(t *testing.T) {
 }
 
 func ClientTest(cfg ClientCfg, t *testing.T) {
-	sc := NewClient(cfg)
+	sc := NewSocks5Client(cfg)
+
+	hc := &http.Client{
+		Transport: &http.Transport{
+			DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+				return sc.Dial(network, addr)
+			},
+		},
+	}
+	resp, err := hc.Get("http://whatismyip.akamai.com/")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.FailNow()
+	}
+
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Println(string(b))
+}
+
+func Socks4ClientTest(cfg ClientCfg, t *testing.T) {
+	sc := NewSocks4Client(cfg)
 
 	hc := &http.Client{
 		Transport: &http.Transport{
@@ -69,7 +97,7 @@ func TestClient_UDP(t *testing.T) {
 }
 
 func ClientTestUDP(cfg ClientCfg, t *testing.T) {
-	sc := NewClient(cfg)
+	sc := NewSocks5Client(cfg)
 	conn, err := sc.Dial("udp", "8.8.8.8:53")
 	if err != nil {
 		t.Fatal(err)
@@ -106,7 +134,7 @@ func TestClient_UDP_TcpDisconnect(t *testing.T) {
 }
 
 func ClientTestUDP_TCPDisconnect(cfg ClientCfg, handshakeCB func(conn *net.TCPConn), t *testing.T) {
-	sc := NewClient(cfg)
+	sc := NewSocks5Client(cfg)
 	sc.SetHandshakeSuccCallback(handshakeCB)
 
 	conn, err := sc.Dial("udp", "8.8.8.8:53")

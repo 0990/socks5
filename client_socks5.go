@@ -7,25 +7,25 @@ import (
 	"time"
 )
 
-type client struct {
+type socks5client struct {
 	cfg                   ClientCfg
 	tcpConn               *net.TCPConn
 	handshakeSuccCallback func(conn *net.TCPConn)
 }
 
-func NewClient(cfg ClientCfg) *client {
-	return &client{
+func NewSocks5Client(cfg ClientCfg) *socks5client {
+	return &socks5client{
 		cfg:                   cfg,
 		tcpConn:               nil,
 		handshakeSuccCallback: nil,
 	}
 }
 
-func (p *client) SetHandshakeSuccCallback(cb func(c *net.TCPConn)) {
+func (p *socks5client) SetHandshakeSuccCallback(cb func(c *net.TCPConn)) {
 	p.handshakeSuccCallback = cb
 }
 
-func (p *client) Dial(network, addr string) (net.Conn, error) {
+func (p *socks5client) Dial(network, addr string) (net.Conn, error) {
 	var cmd byte
 	switch network {
 	case "tcp":
@@ -89,7 +89,7 @@ func (p *client) Dial(network, addr string) (net.Conn, error) {
 	}
 }
 
-func (p *client) selectAuthMethod() (byte, error) {
+func (p *socks5client) selectAuthMethod() (byte, error) {
 	methods := []byte{MethodNone}
 	if p.cfg.UserName != "" && p.cfg.Password != "" {
 		methods = append(methods, MethodUserPass)
@@ -114,7 +114,7 @@ func (p *client) selectAuthMethod() (byte, error) {
 	return reply.Method, nil
 }
 
-func (p *client) authMethod(method byte) error {
+func (p *socks5client) authMethod(method byte) error {
 	switch method {
 	case MethodNone:
 		return nil
@@ -139,7 +139,7 @@ func (p *client) authMethod(method byte) error {
 	}
 }
 
-func (p *client) request(cmd byte, addrByte AddrByte) (*Reply, error) {
+func (p *socks5client) request(cmd byte, addrByte AddrByte) (*Reply, error) {
 	_, err := p.tcpConn.Write(NewRequest(cmd, addrByte).ToBytes())
 	if err != nil {
 		return nil, err

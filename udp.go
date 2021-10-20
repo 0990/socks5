@@ -2,7 +2,6 @@ package socks5
 
 import (
 	"errors"
-	"fmt"
 	"net"
 	"sync"
 	"time"
@@ -64,7 +63,7 @@ func relayToRemote(sender net.PacketConn, datagram []byte) error {
 
 	udpTargetAddr := d.Address()
 
-	PrintDNS(fmt.Sprintf("query dns:%s", udpTargetAddr), d.Data)
+	//PrintDNS(fmt.Sprintf("query dns:%s", udpTargetAddr), d.Data)
 	tgtUDPAddr, err := net.ResolveUDPAddr("udp", udpTargetAddr)
 	if err != nil {
 		return err
@@ -85,7 +84,7 @@ func relayToClient(receiver net.PacketConn, relayer net.PacketConn, clientAddr n
 			return err
 		}
 
-		PrintDNS("dns back", buf[0:n])
+		//PrintDNS("dns back", buf[0:n])
 
 		bAddr, err := NewAddrByteFromString(addr.String())
 		if err != nil {

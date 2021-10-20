@@ -7,8 +7,6 @@ import (
 )
 
 const (
-	VerSocks5 = 0x05
-
 	MethodNone         = 0x00
 	MethodUserPass     = 0x02
 	MethodNoAcceptable = 0xff
@@ -64,20 +62,20 @@ func NewMethodSelectReq(methods []byte) *MethodSelectReq {
 }
 
 func NewMethodSelectReqFrom(r io.Reader) (*MethodSelectReq, error) {
-	b := make([]byte, 2)
+	b := make([]byte, 1)
 	_, err := io.ReadFull(r, b)
 	if err != nil {
 		return nil, err
 	}
-	nMethod := int(b[1])
+	nMethod := int(b[0])
 	methods := make([]byte, nMethod)
 	_, err = io.ReadFull(r, methods)
 	if err != nil {
 		return nil, err
 	}
 	return &MethodSelectReq{
-		Ver:      b[0],
-		NMethods: b[1],
+		Ver:      0x05,
+		NMethods: b[0],
 		Methods:  methods,
 	}, nil
 }
