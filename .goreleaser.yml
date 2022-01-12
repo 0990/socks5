@@ -14,6 +14,9 @@ builds:
   goos:
     - linux
     - windows
+  goarch:
+    - amd64
+    - arm64
   env:
     - CGO_ENABLED=0
 archives:
@@ -24,6 +27,7 @@ archives:
     windows: Windows
     386: i386
     amd64: x86_64
+    arm64: arm64
   files:
     - ss5.json
 checksum:
