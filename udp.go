@@ -13,8 +13,8 @@ const socketBufSize = 64 * 1024
 
 //send: client->relayer->sender->remote
 //receive: client<-relayer<-sender<-remote
-func runUDPRelayServer(listenAddr string, timeout time.Duration) {
-	relayer, err := net.ListenPacket("udp", listenAddr)
+func runUDPRelayServer(listenAddr *net.UDPAddr, timeout time.Duration) {
+	relayer, err := net.ListenUDP("udp", listenAddr)
 	if err != nil {
 		return
 	}

@@ -3,6 +3,7 @@ package socks5
 import (
 	"fmt"
 	"net"
+	"strconv"
 	"strings"
 	"time"
 
@@ -12,6 +13,8 @@ import (
 type Socks5Conn struct {
 	conn net.Conn
 	cfg  ServerCfg
+
+	udpListenAddr *net.UDPAddr
 }
 
 func (p *Socks5Conn) Handle() error {
@@ -119,13 +122,8 @@ func (p *Socks5Conn) handleRequest(req *Request) error {
 }
 
 func (p *Socks5Conn) handleUDP(req *Request) error {
-	addr := p.conn.LocalAddr().(*net.TCPAddr)
-	saddr := addr.String()
-	//docker环境中获取不了本机正确ip,这时需要从事先设置的环境变量中获取
-	if p.cfg.UDPAddr != "" {
-		saddr = p.cfg.UDPAddr
-	}
-	bAddr, err := NewAddrByteFromString(saddr)
+	addrAdv := p.getUDPAdvAddr()
+	bAddr, err := NewAddrByteFromString(addrAdv)
 	if err != nil {
 		p.conn.Write(NewReply(RepServerFailure, nil).ToBytes())
 		return err
@@ -145,6 +143,24 @@ func (p *Socks5Conn) handleUDP(req *Request) error {
 	}
 
 	return nil
+}
+
+func (p *Socks5Conn) getUDPAdvAddr() string {
+	port := p.udpListenAddr.Port
+
+	//docker等环境中获取不了本机正确ip,这时需要从事先设置的配置或环境变量中获取
+	if len(p.cfg.UDPAdvertisedIP) > 0 {
+		return net.JoinHostPort(p.cfg.UDPAdvertisedIP, strconv.FormatInt(int64(port), 10))
+	}
+
+	localAddr := p.conn.LocalAddr().(*net.TCPAddr)
+	addr := net.UDPAddr{
+		IP:   localAddr.IP,
+		Zone: localAddr.Zone,
+		Port: port,
+	}
+
+	return addr.String()
 }
 
 func (p *Socks5Conn) handleConnect(req *Request) error {

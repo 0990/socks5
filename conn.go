@@ -14,8 +14,9 @@ const (
 )
 
 type Conn struct {
-	conn net.Conn
-	cfg  ServerCfg
+	conn          net.Conn
+	cfg           ServerCfg
+	udpListenAddr *net.UDPAddr
 }
 
 func (p *Conn) Handle() error {
@@ -39,8 +40,9 @@ func (p *Conn) Handle() error {
 		return c.Handle()
 	case VerSocks5:
 		c := &Socks5Conn{
-			conn: p.conn,
-			cfg:  p.cfg,
+			conn:          p.conn,
+			cfg:           p.cfg,
+			udpListenAddr: p.udpListenAddr,
 		}
 		return c.Handle()
 	default:

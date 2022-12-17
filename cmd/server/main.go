@@ -28,6 +28,8 @@ func main() {
 		}
 	}
 
+	socks5.CheckServerCfgDefault(cfg)
+
 	logLevel, err := logrus.ParseLevel(cfg.LogLevel)
 	if err != nil {
 		logrus.WithError(err).Warn("parseLogLevel fail,set default level:error")
@@ -38,7 +40,10 @@ func main() {
 
 	logrus.Infof("Server Config:%+v", *cfg)
 
-	server := socks5.NewServer(*cfg)
+	server, err := socks5.NewServer(*cfg)
+	if err != nil {
+		logrus.Fatalln(err)
+	}
 	err = server.Run()
 	if err != nil {
 		logrus.Fatalln(err)
@@ -60,10 +65,10 @@ func parseOSEnvCfg() *socks5.ServerCfg {
 	udpTimeout := os.Getenv("PROXY_UDP_TIMEOUT")
 	tcpTimeout := os.Getenv("PROXY_TCP_TIMEOUT")
 	port := os.Getenv("PROXY_PORT")
-	udpAddr := os.Getenv("PROXY_UDP_ADDR")
+	udpAdvIP := os.Getenv("PROXY_UDP_IP")
 
-	if udpAddr != "" {
-		cfg.UDPAddr = udpAddr
+	if udpAdvIP != "" {
+		cfg.UDPAdvertisedIP = udpAdvIP
 	}
 
 	if username != "" {

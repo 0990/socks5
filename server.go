@@ -11,22 +11,47 @@ type Server interface {
 	Run() error
 }
 
-func NewServer(cfg ServerCfg) Server {
+func NewServer(cfg ServerCfg) (Server, error) {
 	return newServer(cfg)
 }
 
 type server struct {
-	listener   net.Listener
-	cfg        ServerCfg
-	listenAddr string
+	listener net.Listener
+	cfg      ServerCfg
+
+	tcpListenAddr *net.TCPAddr
+	udpListenAddr *net.UDPAddr
 }
 
-func newServer(cfg ServerCfg) *server {
-	p := &server{
-		cfg:        cfg,
-		listenAddr: fmt.Sprintf(":%d", cfg.ListenPort),
+func newServer(cfg ServerCfg) (*server, error) {
+	listenAddr := fmt.Sprintf(":%d", cfg.ListenPort)
+
+	tcpAddress := listenAddr
+	if len(cfg.TCPListen) > 0 {
+		tcpAddress = cfg.TCPListen
 	}
-	return p
+
+	taddr, err := net.ResolveTCPAddr("tcp", tcpAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	udpAddress := listenAddr
+	if len(cfg.UDPListen) > 0 {
+		udpAddress = cfg.UDPListen
+	}
+
+	uaddr, err := net.ResolveUDPAddr("udp", udpAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	p := &server{
+		cfg:           cfg,
+		tcpListenAddr: taddr,
+		udpListenAddr: uaddr,
+	}
+	return p, nil
 }
 
 func (p *server) Run() error {
@@ -35,12 +60,12 @@ func (p *server) Run() error {
 		return err
 	}
 	go p.serve()
-	go runUDPRelayServer(p.listenAddr, time.Duration(p.cfg.UDPTimout)*time.Second)
+	go runUDPRelayServer(p.udpListenAddr, time.Duration(p.cfg.UDPTimout)*time.Second)
 	return nil
 }
 
 func (p *server) listen() error {
-	l, err := net.Listen("tcp", p.listenAddr)
+	l, err := net.ListenTCP("tcp", p.tcpListenAddr)
 	if err != nil {
 		return err
 	}
@@ -61,8 +86,9 @@ func (p *server) serve() {
 
 func (p *server) connHandler(conn net.Conn) {
 	c := &Conn{
-		conn: conn,
-		cfg:  p.cfg,
+		conn:          conn,
+		cfg:           p.cfg,
+		udpListenAddr: p.udpListenAddr,
 	}
 
 	err := c.Handle()

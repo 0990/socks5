@@ -7,23 +7,31 @@ import (
 	"os"
 )
 
+const DefaultListenPort = 1080
+const DefaultTcpTimeout = 60
+const DefaultUdpTimeout = 60
+const DefaultLogLevel = "error"
+
 var DefaultServerConfig = ServerCfg{
-	ListenPort: 1080,
-	UserName:   "",
-	Password:   "",
-	UDPTimout:  60,
-	TCPTimeout: 60,
-	UDPAddr:    "",
-	LogLevel:   "error",
+	ListenPort:      DefaultListenPort,
+	UserName:        "",
+	Password:        "",
+	UDPTimout:       DefaultTcpTimeout,
+	TCPTimeout:      DefaultUdpTimeout,
+	UDPAdvertisedIP: "",
+	LogLevel:        DefaultLogLevel,
 }
 
 type ServerCfg struct {
-	ListenPort int
+	ListenPort      int    //tcp,udp监听端口，仅当TCPListen或UDPListen无值时有效，监听地址为 0.0.0.0:ListenPort
+	TCPListen       string //tcp监听地址
+	UDPListen       string //udp监听地址
+	UDPAdvertisedIP string //udp的广告IP地址,告诉客户端将UDP数据发往这个ip,默认值为udp监听的本地ip地址
+
 	UserName   string
 	Password   string
 	UDPTimout  int
 	TCPTimeout int
-	UDPAddr    string
 	LogLevel   string
 }
 
@@ -56,6 +64,24 @@ func ReadServerCfg(path string) (*ServerCfg, error) {
 	}
 
 	return &conf, nil
+}
+
+func CheckServerCfgDefault(cfg *ServerCfg) {
+	if cfg.ListenPort <= 0 {
+		cfg.ListenPort = DefaultListenPort
+	}
+
+	if cfg.TCPTimeout <= 0 {
+		cfg.TCPTimeout = DefaultTcpTimeout
+	}
+
+	if cfg.UDPTimout <= 0 {
+		cfg.UDPTimout = DefaultUdpTimeout
+	}
+
+	if len(cfg.LogLevel) == 0 {
+		cfg.LogLevel = DefaultLogLevel
+	}
 }
 
 func CreateServerCfg(path string) error {
