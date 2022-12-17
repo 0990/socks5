@@ -17,7 +17,7 @@
   UserName,Password 需要用户名密码鉴权时填写，默认为空
   LogLevel 日志等级（debug,info,warn,error)
 ``` 
-[高级配置](/config.md)
+[高级配置](doc/config.md)
 ## 示例
 ```
 go get github.com/0990/socks5  
