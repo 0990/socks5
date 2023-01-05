@@ -1,4 +1,4 @@
-FROM golang:1.13 AS builder
+FROM golang:1.19.4 AS builder
 COPY . socks5
 WORKDIR socks5
 
