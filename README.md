@@ -2,12 +2,12 @@
 轻量的socks代理服务器，支持socks4,socks4a,socks5,代码简单易读，就像sock原始协议一样
 
 ## Feature
-* 支持 [socks4](doc/SOCKS4.protocol.txt),[socks4a](doc/SOCKS4A.protocol.txt),[socks5(TCP&UDP)](doc/rfc1928.txt)
+* 支持 [socks4](doc/SOCKS4.protocol.txt),[socks4a](doc/socks4A.protocol.txt),[socks5(TCP&UDP)](doc/rfc1928.txt)
 * 支持 [socks5用户名密码鉴权](doc/rfc1929.txt)
 
 ## 使用
- [下载页面](https://github.com/0990/socks5/releases) </br>
- 根据平台选择下载文件，解压后直接执行二进制文件即可（linux平台需要加执行权限)
+ * [下载地址](https://github.com/0990/socks5/releases) 解压后直接执行二进制文件即可（linux平台需要加执行权限)<br>
+ * [Docker安装](doc/docker.md)
 
 ### 配置
  解压后目录下的ss5.json是配置文件<br>
