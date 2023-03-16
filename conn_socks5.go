@@ -108,7 +108,7 @@ func (p *Socks5Conn) checkAuthMethod(method byte) error {
 	}
 }
 
-//TODO suport bind
+// TODO suport bind
 func (p *Socks5Conn) handleRequest(req *Request) error {
 	switch req.Cmd {
 	case CmdConnect:
@@ -166,7 +166,7 @@ func (p *Socks5Conn) getUDPAdvAddr() string {
 func (p *Socks5Conn) handleConnect(req *Request) error {
 	addr := req.Address()
 	logrus.Debug("tcp req:", addr)
-	s, err := net.DialTimeout("tcp", addr, time.Second*10)
+	s, err := net.DialTimeout("tcp", addr, time.Second*3)
 	if err != nil {
 		msg := err.Error()
 		var rep byte = RepHostUnreachable
