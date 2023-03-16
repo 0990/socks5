@@ -11,8 +11,8 @@ import (
 
 const socketBufSize = 64 * 1024
 
-//send: client->relayer->sender->remote
-//receive: client<-relayer<-sender<-remote
+// send: client->relayer->sender->remote
+// receive: client<-relayer<-sender<-remote
 func runUDPRelayServer(listenAddr *net.UDPAddr, timeout time.Duration) {
 	relayer, err := net.ListenUDP("udp", listenAddr)
 	if err != nil {
@@ -63,7 +63,6 @@ func relayToRemote(sender net.PacketConn, datagram []byte) error {
 
 	udpTargetAddr := d.Address()
 
-	//PrintDNS(fmt.Sprintf("query dns:%s", udpTargetAddr), d.Data)
 	tgtUDPAddr, err := net.ResolveUDPAddr("udp", udpTargetAddr)
 	if err != nil {
 		return err
@@ -83,8 +82,6 @@ func relayToClient(receiver net.PacketConn, relayer net.PacketConn, clientAddr n
 		if err != nil {
 			return err
 		}
-
-		//PrintDNS("dns back", buf[0:n])
 
 		bAddr, err := NewAddrByteFromString(addr.String())
 		if err != nil {
