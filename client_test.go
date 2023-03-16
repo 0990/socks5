@@ -133,9 +133,9 @@ func TestClient_UDP_TcpDisconnect(t *testing.T) {
 	}, t)
 }
 
+// TODO 这个测试用例待完善，还没有此功能
 func ClientTestUDP_TCPDisconnect(cfg ClientCfg, handshakeCB func(conn *net.TCPConn), t *testing.T) {
 	sc := NewSocks5Client(cfg)
-	sc.SetHandshakeSuccCallback(handshakeCB)
 
 	conn, err := sc.Dial("udp", "8.8.8.8:53")
 	if err != nil {
