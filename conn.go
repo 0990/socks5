@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net"
 	"time"
 )
 
@@ -13,10 +12,31 @@ const (
 	VerSocks5 = 0x05
 )
 
+type ConnCfg struct {
+	UserName   string
+	Password   string
+	TCPTimeout int32
+
+	UDPAdvertisedIP   string
+	UDPAdvertisedPort int
+}
+
 type Conn struct {
-	conn          net.Conn
-	cfg           ServerCfg
-	udpListenAddr *net.UDPAddr
+	conn Stream
+	cfg  ConnCfg
+
+	customDialTarget func(addr string) (Stream, byte, string, error)
+}
+
+func NewConn(conn Stream, cfg ConnCfg) *Conn {
+	return &Conn{
+		conn: conn,
+		cfg:  cfg,
+	}
+}
+
+func (p *Conn) SetCustomDialTarget(f func(addr string) (Stream, byte, string, error)) {
+	p.customDialTarget = f
 }
 
 func (p *Conn) Handle() error {
@@ -40,17 +60,17 @@ func (p *Conn) Handle() error {
 		return c.Handle()
 	case VerSocks5:
 		c := &Socks5Conn{
-			conn:          p.conn,
-			cfg:           p.cfg,
-			udpListenAddr: p.udpListenAddr,
+			conn: p.conn,
+			cfg:  p.cfg,
 		}
+		c.SetCustomDialTarget(p.customDialTarget)
 		return c.Handle()
 	default:
 		return errors.New("unsupport socks version")
 	}
 }
 
-func copyWithTimeout(dst net.Conn, src net.Conn, timeout time.Duration) error {
+func copyWithTimeout(dst Stream, src Stream, timeout time.Duration) error {
 	b := make([]byte, socketBufSize)
 	for {
 		if timeout != 0 {

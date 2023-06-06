@@ -8,8 +8,8 @@ import (
 )
 
 type Socks4Conn struct {
-	conn net.Conn
-	cfg  ServerCfg
+	conn Stream
+	cfg  ConnCfg
 }
 
 func (p *Socks4Conn) Handle() error {

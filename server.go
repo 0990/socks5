@@ -9,6 +9,7 @@ import (
 
 type Server interface {
 	Run() error
+	SetCustomTcpConnHandler(handler func(conn *net.TCPConn))
 }
 
 func NewServer(cfg ServerCfg) (Server, error) {
@@ -21,6 +22,8 @@ type server struct {
 
 	tcpListenAddr *net.TCPAddr
 	udpListenAddr *net.UDPAddr
+
+	customTcpConnHandler func(conn *net.TCPConn)
 }
 
 func newServer(cfg ServerCfg) (*server, error) {
@@ -95,19 +98,38 @@ func (p *server) serve() {
 			}
 			return
 		}
-		go p.connHandler(conn)
+
+		go p.tcpConnHandler(conn)
 	}
 }
 
-func (p *server) connHandler(conn net.Conn) {
+func (p *server) tcpConnHandler(conn net.Conn) {
+	if p.customTcpConnHandler != nil {
+		p.customTcpConnHandler(conn.(*net.TCPConn))
+		return
+	}
+
+	p.defaultTcpConnHandler(conn)
+}
+
+func (p *server) defaultTcpConnHandler(conn net.Conn) {
 	c := &Conn{
-		conn:          conn,
-		cfg:           p.cfg,
-		udpListenAddr: p.udpListenAddr,
+		conn: conn,
+		cfg: ConnCfg{
+			UserName:          p.cfg.UserName,
+			Password:          p.cfg.Password,
+			TCPTimeout:        int32(p.cfg.TCPTimeout),
+			UDPAdvertisedIP:   p.cfg.UDPAdvertisedIP,
+			UDPAdvertisedPort: p.udpListenAddr.Port,
+		},
 	}
 
 	err := c.Handle()
 	if err != nil {
 		logrus.WithError(err).Error("conn handle")
 	}
+}
+
+func (p *server) SetCustomTcpConnHandler(handler func(conn *net.TCPConn)) {
+	p.customTcpConnHandler = handler
 }

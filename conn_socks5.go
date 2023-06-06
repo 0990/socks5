@@ -2,6 +2,7 @@ package socks5
 
 import (
 	"fmt"
+	"io"
 	"net"
 	"strconv"
 	"strings"
@@ -10,11 +11,22 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type Socks5Conn struct {
-	conn net.Conn
-	cfg  ServerCfg
+type Stream interface {
+	RemoteAddr() net.Addr
+	LocalAddr() net.Addr
+	io.ReadWriteCloser
+	SetReadDeadline(t time.Time) error
+}
 
-	udpListenAddr *net.UDPAddr
+type Socks5Conn struct {
+	conn Stream
+	cfg  ConnCfg
+
+	customDialTarget func(addr string) (Stream, byte, string, error)
+}
+
+func (p *Socks5Conn) SetCustomDialTarget(f func(addr string) (Stream, byte, string, error)) {
+	p.customDialTarget = f
 }
 
 func (p *Socks5Conn) Handle() error {
@@ -146,7 +158,7 @@ func (p *Socks5Conn) handleUDP(req *Request) error {
 }
 
 func (p *Socks5Conn) getUDPAdvAddr() string {
-	port := p.udpListenAddr.Port
+	port := p.cfg.UDPAdvertisedPort
 
 	//docker等环境中获取不了本机正确ip,这时需要从事先设置的配置或环境变量中获取
 	if len(p.cfg.UDPAdvertisedIP) > 0 {
@@ -166,22 +178,16 @@ func (p *Socks5Conn) getUDPAdvAddr() string {
 func (p *Socks5Conn) handleConnect(req *Request) error {
 	addr := req.Address()
 	logrus.Debug("tcp req:", addr)
-	s, err := net.DialTimeout("tcp", addr, time.Second*3)
+
+	s, rep, bindAddr, err := p.dialTarget(addr)
 	if err != nil {
-		msg := err.Error()
-		var rep byte = RepHostUnreachable
-		if strings.Contains(msg, "refused") {
-			rep = RepConnectionRefused
-		} else if strings.Contains(msg, "network is unreachable") {
-			rep = RepNetworkUnreachable
-		}
 		p.conn.Write(NewReply(rep, nil).ToBytes())
 		logrus.WithError(err).Debugf("connect to %v failed", req.Address())
 		return nil
 	}
 	defer s.Close()
 
-	bAddr, err := NewAddrByteFromString(s.LocalAddr().(*net.TCPAddr).String())
+	bAddr, err := NewAddrByteFromString(bindAddr)
 	if err != nil {
 		p.conn.Write(NewReply(RepServerFailure, nil).ToBytes())
 		return fmt.Errorf("NewAddrByteFromString:%w", err)
@@ -199,6 +205,30 @@ func (p *Socks5Conn) handleConnect(req *Request) error {
 
 	copyWithTimeout(s, p.conn, timeout)
 	return nil
+}
+
+func (p *Socks5Conn) dialTarget(addr string) (Stream, byte, string, error) {
+	if p.customDialTarget != nil {
+		return p.customDialTarget(addr)
+	}
+
+	return p.defaultDialTarget(addr)
+}
+
+func (p *Socks5Conn) defaultDialTarget(addr string) (Stream, byte, string, error) {
+	s, err := net.DialTimeout("tcp", addr, time.Second*3)
+	if err != nil {
+		msg := err.Error()
+		var rep byte = RepHostUnreachable
+		if strings.Contains(msg, "refused") {
+			rep = RepConnectionRefused
+		} else if strings.Contains(msg, "network is unreachable") {
+			rep = RepNetworkUnreachable
+		}
+		return nil, rep, "", err
+	}
+
+	return s, RepSuccess, s.LocalAddr().(*net.TCPAddr).String(), nil
 }
 
 func (p *Socks5Conn) readRequest() (*Request, error) {
