@@ -9,6 +9,8 @@ import (
 
 type socks5client struct {
 	cfg ClientCfg
+
+	handShakeCallback func(cmd byte, reply *Reply)
 }
 
 func NewSocks5Client(cfg ClientCfg) *socks5client {
@@ -17,7 +19,15 @@ func NewSocks5Client(cfg ClientCfg) *socks5client {
 	}
 }
 
-func (p socks5client) Dial(network, addr string) (net.Conn, error) {
+func (p *socks5client) SetHandShakeCallback(callback func(cmd byte, reply *Reply)) {
+	p.handShakeCallback = callback
+}
+
+func (p *socks5client) Dial(network, addr string) (net.Conn, error) {
+	return p.DialTimeout(network, addr, 0)
+}
+
+func (p *socks5client) DialTimeout(network, addr string, timeout time.Duration) (net.Conn, error) {
 	var cmd byte
 	switch network {
 	case "tcp":
@@ -33,9 +43,19 @@ func (p socks5client) Dial(network, addr string) (net.Conn, error) {
 		return nil, err
 	}
 
-	conn, err := net.Dial("tcp", p.cfg.ServerAddr)
-	if err != nil {
-		return nil, err
+	var conn net.Conn
+	if timeout > 0 {
+		c, err := net.DialTimeout("tcp", p.cfg.ServerAddr, timeout)
+		if err != nil {
+			return nil, err
+		}
+		conn = c
+	} else {
+		c, err := net.Dial("tcp", p.cfg.ServerAddr)
+		if err != nil {
+			return nil, err
+		}
+		conn = c
 	}
 
 	tcpConn := conn.(*net.TCPConn)
@@ -61,6 +81,10 @@ func (p socks5client) Dial(network, addr string) (net.Conn, error) {
 		return nil, err
 	}
 
+	if p.handShakeCallback != nil {
+		p.handShakeCallback(cmd, reply)
+	}
+
 	if cmd == CmdConnect {
 		return tcpConn, nil
 	} else {
@@ -76,7 +100,7 @@ func (p socks5client) Dial(network, addr string) (net.Conn, error) {
 	}
 }
 
-func (p socks5client) selectAuthMethod(conn *net.TCPConn) (byte, error) {
+func (p *socks5client) selectAuthMethod(conn *net.TCPConn) (byte, error) {
 	methods := []byte{MethodNone}
 	if p.cfg.UserName != "" && p.cfg.Password != "" {
 		methods = append(methods, MethodUserPass)
@@ -101,7 +125,7 @@ func (p socks5client) selectAuthMethod(conn *net.TCPConn) (byte, error) {
 	return reply.Method, nil
 }
 
-func (p socks5client) authMethod(conn *net.TCPConn, method byte) error {
+func (p *socks5client) authMethod(conn *net.TCPConn, method byte) error {
 	switch method {
 	case MethodNone:
 		return nil
@@ -126,7 +150,7 @@ func (p socks5client) authMethod(conn *net.TCPConn, method byte) error {
 	}
 }
 
-func (p socks5client) request(conn *net.TCPConn, cmd byte, addrByte AddrByte) (*Reply, error) {
+func (p *socks5client) request(conn *net.TCPConn, cmd byte, addrByte AddrByte) (*Reply, error) {
 	_, err := conn.Write(NewRequest(cmd, addrByte).ToBytes())
 	if err != nil {
 		return nil, err

@@ -13,7 +13,7 @@ import (
 //you should start a socks5 server before test
 //for me,use ss5 because it support udp
 
-const TEST_SERVER_ADDR = "127.0.0.1:1086"
+const TEST_SERVER_ADDR = "10.229.1.172:7891"
 
 func TestClient_NoAuth(t *testing.T) {
 	ClientTest(ClientCfg{

@@ -123,13 +123,23 @@ func (p *SenderMap) Get(key string) (net.PacketConn, bool) {
 
 type SocksUDPConn struct {
 	*net.UDPConn
-	dstAddr AddrByte
-	timeout time.Duration
+	dstAddr      AddrByte
+	timeout      time.Duration
+	readDeadline time.Time
+}
+
+func (p *SocksUDPConn) SetReadDeadline(t time.Time) error {
+	p.readDeadline = t
+	return nil
 }
 
 func (p *SocksUDPConn) Read(b []byte) (int, error) {
-	if p.timeout != 0 {
-		p.UDPConn.SetReadDeadline(time.Now().Add(p.timeout))
+	if p.readDeadline.IsZero() {
+		if p.timeout != 0 {
+			p.UDPConn.SetReadDeadline(time.Now().Add(p.timeout))
+		}
+	} else {
+		p.UDPConn.SetReadDeadline(p.readDeadline)
 	}
 
 	buf := make([]byte, socketBufSize)
