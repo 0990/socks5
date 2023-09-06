@@ -56,7 +56,7 @@ func main() {
 
 }
 
-//从环境变量中取配置，优先使用环境变量中的值
+// 从环境变量中取配置，优先使用环境变量中的值
 func parseOSEnvCfg() *socks5.ServerCfg {
 	cfg := socks5.DefaultServerConfig
 
@@ -65,7 +65,7 @@ func parseOSEnvCfg() *socks5.ServerCfg {
 	udpTimeout := os.Getenv("PROXY_UDP_TIMEOUT")
 	tcpTimeout := os.Getenv("PROXY_TCP_TIMEOUT")
 	port := os.Getenv("PROXY_PORT")
-	udpAdvIP := os.Getenv("PROXY_UDP_IP")
+	udpAdvIP := os.Getenv("PROXY_ADVERTISED_UDP_IP")
 
 	if udpAdvIP != "" {
 		cfg.UDPAdvertisedIP = udpAdvIP

@@ -1,28 +1,37 @@
 # socks5
-轻量的socks代理服务器，支持socks4,socks4a,socks5,代码简单易读，就像sock原始协议一样
+[中文文档](doc/README_zh.md)<br>
+A lightweight SOCKS proxy server that supports socks4, socks4a, and socks5 protocols. The code is simple and easy to read, just like the original SOCKS protocol.
 
 ## Feature
-* 支持 [socks4](doc/SOCKS4.protocol.txt),[socks4a](doc/socks4A.protocol.txt),[socks5(TCP&UDP)](doc/rfc1928.txt)
-* 支持 [socks5用户名密码鉴权](doc/rfc1929.txt)
+* support [socks4](doc/SOCKS4.protocol.txt),[socks4a](doc/socks4A.protocol.txt),[socks5(TCP&UDP)](doc/rfc1928.txt)
+* Supports [socks5 username/password authentication](doc/rfc1929.txt)
 
-## 使用
- * [下载地址](https://github.com/0990/socks5/releases) 解压后直接执行二进制文件即可（linux平台需要加执行权限)<br>
- * [Docker安装](doc/docker.md)
+## Usage
+Download the latest program for your operating system and architecture from the [Release](https://github.com/0990/socks5/releases) page.
+Extracting,then execute the binary file directly (Linux platform requires execution permission)<br>
+```bash
+./ss5
+```
+or
+```bash
+./ss5 -c ./ss5.json
+```
+[Docker installation](doc/docker.md)
 
-### 配置
- 解压后目录下的ss5.json是配置文件<br>
- 最简配置说明:  
+### Configuration
+The ss5.json file in the extracted directory is the configuration file<br>
+Simple configuration instructions:  
  ```
-  ListenPort tcp和udp代理的监听端口，默认是1080 
-  UserName,Password 需要用户名密码鉴权时填写，默认为空
-  LogLevel 日志等级（debug,info,warn,error)
+  ListenPort The listening port for TCP and UDP proxies, default is 1080
+  UserName,Password Fill in if username/password authentication is required, default is empty
+  LogLevel Log level (debug, info, warn, error)
 ``` 
-[高级配置](doc/config.md)
-## 示例
+[Advanced configuration](doc/config.md)
+## Package Usage
 ```
 go get github.com/0990/socks5  
 ```
-以下为一个简单示用
+Here is a simple example:
 ```
 s := socks5.NewServer(socks5.ServerCfg{
 	    ListenPort: 1080,
@@ -38,7 +47,7 @@ if err != nil {
 }
 ```
 ## TODO
-* 支持 BIND 命令
+* Support BIND command
 
 ## Thanks
 [txthinking/socks5](https://github.com/txthinking/socks5)  

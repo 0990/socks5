@@ -11,14 +11,14 @@ docker run -d --name socks5 -p 1080:1080/tcp -p 1080:1080/udp -e PROXY_UDP_IP="x
 ```
 x.x.x.x为docker的访问ip
 
-## 环境变量
+## environment
 ```
-PROXY_USER 用户名（鉴权用)
-PROXY_PASSWORD 密码（鉴权用)
-PROXY_UDP_TIMEOUT tcp超时时间（默认60s)
-PROXY_TCP_TIMEOUT udp超时时间（默认60s)
-PROXY_PORT tcp及udp代理端口(默认1080)
-PROXY_UDP_IP udp下发地址
+PROXY_USER username
+PROXY_PASSWORD password
+PROXY_UDP_TIMEOUT tcp timeout seconds(default 60s)
+PROXY_TCP_TIMEOUT udp timeout seconds(default 60s)
+PROXY_PORT tcp and udp listen port(default 1080)
+PROXY_ADVERTISED_UDP_IP udp advertised ip
 ```
 
 
