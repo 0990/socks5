@@ -14,9 +14,15 @@ builds:
   goos:
     - linux
     - windows
+    - android
   goarch:
     - amd64
     - arm64
+  ignore:
+    - goos: windows
+      goarch: arm64
+    - goos: android
+      goarch: amd64
   env:
     - CGO_ENABLED=0
 archives:
