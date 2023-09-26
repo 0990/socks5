@@ -15,7 +15,7 @@ type Socks4Conn struct {
 func (p *Socks4Conn) Handle() error {
 	req, err := p.readRequest()
 	if err != nil {
-		return fmt.Errorf("readRequest:%w", err)
+		return fmt.Errorf("failed to readRequest:%w", err)
 	}
 
 	return p.handleRequest(req)
@@ -24,7 +24,7 @@ func (p *Socks4Conn) Handle() error {
 func (p *Socks4Conn) readRequest() (*ReqSocks4, error) {
 	req, err := NewReqSocks4From(p.conn)
 	if err != nil {
-		return nil, fmt.Errorf("readRequest:%w", err)
+		return nil, fmt.Errorf("failed to NewReqSocks4From:%w", err)
 	}
 	return req, nil
 }

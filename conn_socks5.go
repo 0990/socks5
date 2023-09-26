@@ -42,7 +42,7 @@ func (p *Socks5Conn) Handle() error {
 
 	req, err := p.readRequest()
 	if err != nil {
-		return fmt.Errorf("readRequest:%w", err)
+		return fmt.Errorf("failed to readRequest:%w", err)
 	}
 
 	return p.handleRequest(req)
@@ -234,7 +234,7 @@ func (p *Socks5Conn) defaultDialTarget(addr string) (Stream, byte, string, error
 func (p *Socks5Conn) readRequest() (*Request, error) {
 	req, err := NewRequestFrom(p.conn)
 	if err != nil {
-		return nil, fmt.Errorf("readRequest:%w", err)
+		return nil, fmt.Errorf("failed to NewRequestFrom:%w", err)
 	}
 	return req, nil
 }

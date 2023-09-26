@@ -68,7 +68,7 @@ func relayToRemote(sender net.PacketConn, datagram []byte) error {
 		return err
 	}
 
-	logrus.Debug("udp  req:", udpTargetAddr)
+	logrus.Debug("udp req:", udpTargetAddr)
 
 	_, err = sender.WriteTo(d.Data, tgtUDPAddr)
 	return err
