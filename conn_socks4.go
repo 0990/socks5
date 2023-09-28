@@ -56,10 +56,6 @@ func (p *Socks4Conn) handleConnect(req *ReqSocks4) error {
 	}
 
 	timeout := time.Duration(p.cfg.TCPTimeout) * time.Second
-	go func() {
-		copyWithTimeout(p.conn, s, timeout)
-	}()
-
-	copyWithTimeout(s, p.conn, timeout)
+	Pipe(p.conn, s, timeout)
 	return nil
 }

@@ -1,8 +1,10 @@
 package socks5
 
 import (
+	"errors"
 	"fmt"
 	"github.com/sirupsen/logrus"
+	"io"
 	"net"
 	"time"
 )
@@ -126,7 +128,9 @@ func (p *server) defaultTcpConnHandler(conn net.Conn) {
 
 	err := c.Handle()
 	if err != nil {
-		logrus.WithError(err).Error("conn handle")
+		if !errors.Is(err, io.EOF) {
+			logrus.WithError(err).Debug("conn handle")
+		}
 	}
 }
 

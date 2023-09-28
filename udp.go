@@ -2,14 +2,13 @@ package socks5
 
 import (
 	"errors"
+	"github.com/0990/gotun/pkg/pool"
 	"net"
 	"sync"
 	"time"
 
 	"github.com/sirupsen/logrus"
 )
-
-const socketBufSize = 64 * 1024
 
 // send: client->relayer->sender->remote
 // receive: client<-relayer<-sender<-remote
@@ -22,8 +21,9 @@ func runUDPRelayServer(listenAddr *net.UDPAddr, timeout time.Duration) {
 
 	var senders SenderMap
 
-	buf := make([]byte, socketBufSize)
 	for {
+		buf := pool.GetBuf(MaxSegmentSize)
+
 		n, addr, err := relayer.ReadFrom(buf)
 		if err != nil {
 			continue
@@ -75,7 +75,9 @@ func relayToRemote(sender net.PacketConn, datagram []byte) error {
 }
 
 func relayToClient(receiver net.PacketConn, relayer net.PacketConn, clientAddr net.Addr, timeout time.Duration) error {
-	buf := make([]byte, socketBufSize)
+	buf := pool.GetBuf(MaxSegmentSize)
+	defer pool.PutBuf(buf)
+
 	for {
 		receiver.SetReadDeadline(time.Now().Add(timeout))
 		n, addr, err := receiver.ReadFrom(buf)
@@ -142,7 +144,7 @@ func (p *SocksUDPConn) Read(b []byte) (int, error) {
 		p.UDPConn.SetReadDeadline(p.readDeadline)
 	}
 
-	buf := make([]byte, socketBufSize)
+	buf := pool.GetBuf(MaxSegmentSize)
 	n, err := p.UDPConn.Read(buf)
 	if err != nil {
 		return 0, err

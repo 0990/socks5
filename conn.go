@@ -2,9 +2,7 @@ package socks5
 
 import (
 	"errors"
-	"fmt"
 	"io"
-	"time"
 )
 
 const (
@@ -45,9 +43,6 @@ func (p *Conn) Handle() error {
 	ver := make([]byte, 1)
 	_, err := io.ReadFull(p.conn, ver)
 	if err != nil {
-		if err == io.EOF {
-			return nil
-		}
 		return err
 	}
 
@@ -68,25 +63,4 @@ func (p *Conn) Handle() error {
 	default:
 		return errors.New("unsupport socks version")
 	}
-}
-
-func copyWithTimeout(dst Stream, src Stream, timeout time.Duration) error {
-	b := make([]byte, socketBufSize)
-	for {
-		if timeout != 0 {
-			src.SetReadDeadline(time.Now().Add(timeout))
-		}
-		n, err := src.Read(b)
-		if err != nil {
-			return fmt.Errorf("copy read:%w", err)
-		}
-		wn, err := dst.Write(b[0:n])
-		if err != nil {
-			return fmt.Errorf("copy write:%w", err)
-		}
-		if wn != n {
-			return fmt.Errorf("copy write not full")
-		}
-	}
-	return nil
 }

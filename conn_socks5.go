@@ -182,8 +182,7 @@ func (p *Socks5Conn) handleConnect(req *Request) error {
 	s, rep, bindAddr, err := p.dialTarget(addr)
 	if err != nil {
 		p.conn.Write(NewReply(rep, nil).ToBytes())
-		logrus.WithError(err).Debugf("connect to %v failed", req.Address())
-		return nil
+		return fmt.Errorf("failed to dialTarget(%s):%w", addr, err)
 	}
 	defer s.Close()
 
@@ -195,16 +194,11 @@ func (p *Socks5Conn) handleConnect(req *Request) error {
 
 	_, err = p.conn.Write(NewReply(RepSuccess, bAddr).ToBytes())
 	if err != nil {
-		return fmt.Errorf("reply:%w", err)
+		return fmt.Errorf("faied to write reply:%w", err)
 	}
 
 	timeout := time.Duration(p.cfg.TCPTimeout) * time.Second
-	go func() {
-		copyWithTimeout(p.conn, s, timeout)
-	}()
-
-	copyWithTimeout(s, p.conn, timeout)
-	return nil
+	return Pipe(p.conn, s, timeout)
 }
 
 func (p *Socks5Conn) dialTarget(addr string) (Stream, byte, string, error) {
