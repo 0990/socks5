@@ -27,5 +27,5 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         goos: ${{ matrix.goos }}
         goarch: ${{ matrix.goarch }}
-        project_path: "./server/cmd"
+        project_path: "./cmd/server"
         extra_files: "ss5.json"
