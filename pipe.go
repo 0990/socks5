@@ -2,7 +2,7 @@ package socks5
 
 import (
 	"errors"
-	"github.com/0990/gotun/pkg/pool"
+	"github.com/0990/socks5/pkg/pool"
 	"io"
 	"time"
 )
