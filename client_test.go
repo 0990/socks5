@@ -4,16 +4,19 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"github.com/sirupsen/logrus"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"testing"
+	"time"
 )
 
 //you should start a socks5 server before test
 //for me,use ss5 because it support udp
 
-const TEST_SERVER_ADDR = "10.229.1.172:7891"
+const TEST_SERVER_ADDR = "127.0.0.1:1080"
 
 func TestClient_NoAuth(t *testing.T) {
 	ClientTest(ClientCfg{
@@ -160,4 +163,96 @@ func ClientTestUDP_TCPDisconnect(cfg ClientCfg, handshakeCB func(conn *net.TCPCo
 	}
 
 	t.FailNow()
+}
+
+func TestClient_TCPTimeout(t *testing.T) {
+	echoServerAddr := "127.0.0.1:2222"
+	err := StartTCPEchoServer(echoServerAddr, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sc := NewSocks5Client(ClientCfg{
+		ServerAddr: "127.0.0.1:1070",
+		UserName:   "",
+		Password:   "",
+		UDPTimout:  30,
+		TCPTimeout: 30,
+	})
+	conn, err := sc.Dial("tcp", echoServerAddr)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	go func() {
+		for {
+			buf := make([]byte, 65535)
+			n, err := conn.Read(buf)
+			if err != nil {
+				if err != io.EOF {
+					logrus.WithError(err).Error("read from tcp")
+				} else {
+					logrus.WithError(err).Info("read from tcp")
+				}
+				return
+			}
+			fmt.Println("read", string(buf[:n]))
+		}
+	}()
+
+	for {
+		fmt.Println(time.Now())
+		_, err := conn.Write([]byte("hello"))
+		if err != nil {
+			t.Fatal(err)
+			return
+		}
+		time.Sleep(time.Second * 9)
+	}
+
+}
+
+func StartTCPEchoServer(addr string, noEcho bool) error {
+	listener, err := net.Listen("tcp", addr)
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		for {
+			conn, err := listener.Accept()
+			if err != nil {
+				return
+			}
+
+			go func(conn net.Conn) {
+				defer conn.Close()
+
+				log := logrus.WithFields(logrus.Fields{
+					"address": conn.RemoteAddr(),
+				})
+
+				for {
+					buf := make([]byte, 65535)
+					n, err := conn.Read(buf)
+					if err != nil {
+						if err != io.EOF {
+							log.WithError(err).Error("read from tcp")
+						} else {
+							log.WithError(err).Info("read from tcp")
+						}
+						return
+					}
+
+					log.WithField("data", string(buf[0:n])).Info("echoserver tcp receive")
+					if !noEcho {
+						log.WithField("data", string(buf[0:n])).Info("echoserver echo back")
+						conn.Write(buf[0:n])
+					}
+				}
+
+			}(conn)
+		}
+	}()
+	return nil
 }
