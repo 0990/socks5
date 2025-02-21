@@ -5,7 +5,7 @@
     "UDPAdvertisedIP": "",
     "UserName": "",
     "Password": "",
-    "UDPTimout": 60,
-    "TCPTimeout": 60,
+    "UDPTimout": 90,
+    "TCPTimeout": 300,
     "LogLevel": "error"
 }

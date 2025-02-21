@@ -8,8 +8,8 @@ import (
 )
 
 const DefaultListenPort = 1080
-const DefaultTcpTimeout = 60
-const DefaultUdpTimeout = 60
+const DefaultTcpTimeout = 300
+const DefaultUdpTimeout = 90
 const DefaultLogLevel = "error"
 
 var DefaultServerConfig = ServerCfg{
