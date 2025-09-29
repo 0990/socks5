@@ -46,9 +46,11 @@ func Pipe(left Stream, right Stream, timeout time.Duration) error {
 	results := make(chan error, 2)
 	go func() {
 		_, err := unidirectionalStream(left, right, updateActivity)
+		left.SetReadDeadline(time.Now())
 		results <- err
 	}()
 	_, err := unidirectionalStream(right, left, updateActivity)
+	right.SetReadDeadline(time.Now())
 	results <- err
 
 	// 停止监控
