@@ -6,11 +6,13 @@ import (
 	"github.com/sirupsen/logrus"
 	"io"
 	"net"
+	"sync"
 	"time"
 )
 
 type Server interface {
 	Run() error
+	Close() error
 	SetCustomTcpConnHandler(handler func(conn *net.TCPConn))
 }
 
@@ -20,12 +22,15 @@ func NewServer(cfg ServerCfg) (Server, error) {
 
 type server struct {
 	listener net.Listener
+	udpConn  *net.UDPConn
 	cfg      ServerCfg
 
 	tcpListenAddr *net.TCPAddr
 	udpListenAddr *net.UDPAddr
 
 	customTcpConnHandler func(conn *net.TCPConn)
+
+	closeOnce sync.Once
 }
 
 func newServer(cfg ServerCfg) (*server, error) {
@@ -65,7 +70,13 @@ func (p *server) Run() error {
 		return err
 	}
 	go p.serve()
-	go runUDPRelayServer(p.udpListenAddr, time.Duration(p.cfg.UDPTimout)*time.Second)
+
+	udpConn, err := runUDPRelayServer(p.udpListenAddr, time.Duration(p.cfg.UDPTimout)*time.Second)
+	if err != nil {
+		p.listener.Close()
+		return err
+	}
+	p.udpConn = udpConn
 	return nil
 }
 
@@ -136,4 +147,20 @@ func (p *server) defaultTcpConnHandler(conn net.Conn) {
 
 func (p *server) SetCustomTcpConnHandler(handler func(conn *net.TCPConn)) {
 	p.customTcpConnHandler = handler
+}
+
+// Close 关闭TCP listener和UDP relay server,可重复调用
+func (p *server) Close() error {
+	var err error
+	p.closeOnce.Do(func() {
+		if p.listener != nil {
+			err = p.listener.Close()
+		}
+		if p.udpConn != nil {
+			if e := p.udpConn.Close(); err == nil {
+				err = e
+			}
+		}
+	})
+	return err
 }

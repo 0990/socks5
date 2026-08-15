@@ -12,44 +12,51 @@ import (
 
 // send: client->relayer->sender->remote
 // receive: client<-relayer<-sender<-remote
-func runUDPRelayServer(listenAddr *net.UDPAddr, timeout time.Duration) {
+// 返回*net.UDPConn用于外部(Close)停止relay server
+func runUDPRelayServer(listenAddr *net.UDPAddr, timeout time.Duration) (*net.UDPConn, error) {
 	relayer, err := net.ListenUDP("udp", listenAddr)
 	if err != nil {
-		return
+		return nil, err
 	}
-	defer relayer.Close()
 
-	var senders SenderMap
+	go func() {
+		defer relayer.Close()
 
-	for {
-		buf := pool.GetBuf(MaxSegmentSize)
+		var senders SenderMap
 
-		n, addr, err := relayer.ReadFrom(buf)
-		if err != nil {
-			continue
-		}
-		saddr := addr.String()
-		sender, exist := senders.Get(saddr)
-		if !exist {
-			sender, err = net.ListenPacket("udp", "")
+		for {
+			buf := pool.GetBuf(MaxSegmentSize)
+
+			n, addr, err := relayer.ReadFrom(buf)
+			if err != nil {
+				// relayer被外部Close时ReadFrom会返回错误,退出循环
+				return
+			}
+			saddr := addr.String()
+			sender, exist := senders.Get(saddr)
+			if !exist {
+				sender, err = net.ListenPacket("udp", "")
+				if err != nil {
+					continue
+				}
+				senders.Add(addr.String(), sender)
+
+				go func() {
+					relayToClient(sender, relayer, addr, timeout)
+					if sender := senders.Del(saddr); sender != nil {
+						sender.Close()
+					}
+				}()
+			}
+
+			err = relayToRemote(sender, buf[0:n])
 			if err != nil {
 				continue
 			}
-			senders.Add(addr.String(), sender)
-
-			go func() {
-				relayToClient(sender, relayer, addr, timeout)
-				if sender := senders.Del(saddr); sender != nil {
-					sender.Close()
-				}
-			}()
 		}
+	}()
 
-		err = relayToRemote(sender, buf[0:n])
-		if err != nil {
-			continue
-		}
-	}
+	return relayer, nil
 }
 
 func relayToRemote(sender net.PacketConn, datagram []byte) error {
