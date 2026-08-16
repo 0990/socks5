@@ -153,8 +153,6 @@ func (p *Socks5Conn) handleUDP(req *Request) error {
 			return err
 		}
 	}
-
-	return nil
 }
 
 func (p *Socks5Conn) getUDPAdvAddr() string {

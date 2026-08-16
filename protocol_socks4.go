@@ -36,7 +36,11 @@ func NewReqSocks4(cmd byte, addr string) (*ReqSocks4, error) {
 
 	var hostname []byte
 	if ip := net.ParseIP(host); ip != nil {
-		dstIP = ip
+		ip4 := ip.To4()
+		if ip4 == nil {
+			return nil, fmt.Errorf("addr:%s socks4 not support ipv6", addr)
+		}
+		dstIP = ip4
 	} else {
 		dstIP[0] = 0
 		dstIP[1] = 0
